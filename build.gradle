@@ -83,7 +83,7 @@ unimined.minecraft {
                 at(*accessTransformerLocations)
             }
         }
-        loader "2026.11.05"
+        loader "2026.11.05-2"
         runs.all {
             systemProperty("outlands.dev.mixin", "${mod_id}.mixin.json")
             args += ['--username', minecraft_username]
@@ -150,6 +150,7 @@ sourceSets {
                 property('mod_name', mod_name)
                 property('mod_version', mod_version)
                 property('package', "${root_package}.${mod_id}")
+                property('mod_issue_tracker', mod_issue_tracker)
             }
             resources {
                 property('mod_id', mod_id)

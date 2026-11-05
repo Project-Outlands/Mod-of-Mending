@@ -17,6 +17,14 @@ public class ModOfMendingConfig {
     public static ModPatchConfig modPatchConfig = new ModPatchConfig();
 
     @Config.Comment("""
+        Universal patches are driven by class name lists, so covering a crash is only a matter of adding one class to
+        one list. With this on, a crash that matches a known shape (a modern JDK moved an API the mod still uses)
+        gets its offending class added to the matching list automatically, plus a note in the crash report.
+        Entries are written to custom_config/<modid>.cfg, never to this file; delete a line there to undo one.""")
+    @Config.Name("Auto Cover Unpatched Crashes")
+    public static boolean autoCover = true;
+
+    @Config.Comment("""
         About *static final field has no write access*
         Field.set() and Field.get() may throw exceptions in newer Java when trying to handle final fields.
         The few options remain are Unsafe or JNI.
@@ -307,11 +315,15 @@ public class ModOfMendingConfig {
     };
 
     @Config.Comment("""
-        Since JDK 26, writing java.lang.reflect.Field.modifiers through reflection throws IllegalAccessException
-        (the field is final and Field.set() enforces module opens / final field mutation policy).
-        Mods that clear the final bit of other fields via this hack crash at the write.
-        Each entry redirects every Field.set*/set in that method to a hook that drops writes to the JDK-internal
-        'modifiers' field (unnecessary on modern JDKs) and delegates all other writes to normal reflection.
+        Clearing the final bit through java.lang.reflect.Field.modifiers is dead weight: Field.set() writes final
+        fields by itself (the bit only matters for constants the compiler folded in), and on Java 26+ no bypass,
+        JavaBypass included, can mutate that field anyway - so old code that clears it fails on that very line.
+        Each entry makes the idiom inert inside that method: asking for Field.modifiers yields a stand-in field, so
+        getDeclaredField / setAccessible / setInt all run to completion and do nothing, while every other
+        Field.set*/set in the method stays a plain Field.set().
+        The list stays per method because the rewrite also turns that method's checked NoSuchFieldException /
+        IllegalAccessException into unchecked ones - fine for the modifier idiom, not something to force on every
+        class.
         Format: "fully.qualified.ClassName|methodName"
         """)
     @Config.Name("Modifiers Write Redirect Targets")

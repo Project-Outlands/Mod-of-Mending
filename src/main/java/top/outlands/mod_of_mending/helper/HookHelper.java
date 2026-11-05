@@ -371,6 +371,41 @@ public class HookHelper {
 
     // ==================== Field write hooks (see ModifiersWriteRedirectTransformer) ====================
 
+    /**
+     * Clearing the final bit is pointless - {@code Field.set} writes final fields anyway - and on Java 26+ the bit
+     * cannot be cleared at all. So the only correct behaviour for the whole {@code Field.modifiers} idiom is to make
+     * it inert: the lookup is answered with a stand-in field and the write is dropped.
+     */
+
+    /** Public so that {@code setAccessible} and {@code setInt(null, x)} on it are always allowed. */
+    public static final class ModifiersStandIn {
+        public static int value;
+    }
+
+    private static final Field MODIFIERS_STAND_IN = modifiersStandIn();
+
+    private static Field modifiersStandIn() {
+        try {
+            Field field = ModifiersStandIn.class.getDeclaredField("value");
+            field.setAccessible(true);
+            return field;
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    /**
+     * Bytecode-level replacement for {@code Class.getDeclaredField} in methods that clear the final bit:
+     * asking for {@code java.lang.reflect.Field.modifiers} yields the stand-in instead, so the caller's
+     * get/setAccessible/setInt sequence runs to completion without touching the JDK field.
+     */
+    public static Field getDeclaredField(Class<?> owner, String name) throws NoSuchFieldException {
+        if (owner == Field.class && "modifiers".equals(name) && MODIFIERS_STAND_IN != null) {
+            return MODIFIERS_STAND_IN;
+        }
+        return owner.getDeclaredField(name);
+    }
+
     public static void setField(Field f, Object obj, Object value) {
         if (!isJdkModifiersField(f)) {
             try {

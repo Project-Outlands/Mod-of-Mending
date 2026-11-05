@@ -1,5 +1,6 @@
 package top.outlands.mod_of_mending.common;
 
+import top.outlands.mod_of_mending.common.autocover.UniversalPatch;
 import top.outlands.mod_of_mending.config.ModOfMendingConfig;
 import top.outlands.mod_of_mending.transformer.advancedrocket.ClassTransformerTransformer;
 import top.outlands.mod_of_mending.transformer.aether.ClientProxyTransformer;
@@ -508,25 +509,7 @@ public class TransformerHelper {
         }
         if (ModOfMendingConfig.remapTargets.length > 0) {
             TransformerDelegate.registerExplicitTransformer(
-                    new RemapTransformer(
-                            new String[] {
-                                "javax/xml/bind/",
-                                "javax/xml/ws/",
-                                "javax/ws/",
-                                "javax/activation/",
-                                "javax/soap/",
-                                "javax/jws/",
-                                "javax/inject/"
-                            },
-                            new String[] {
-                                "jakarta/xml/bind/",
-                                "jakarta/xml/ws/",
-                                "jakarta/ws/",
-                                "jakarta/activation/",
-                                "jakarta/soap/",
-                                "jakarta/jws/",
-                                "jakarta/inject/"
-                            }),
+                    new RemapTransformer(UniversalPatch.JAVAX_FROM, UniversalPatch.JAVAX_TO),
                     ModOfMendingConfig.remapTargets);
         }
         if (ModOfMendingConfig.remapLWTargets.length > 0) {
@@ -534,13 +517,7 @@ public class TransformerHelper {
         }
         if (ModOfMendingConfig.remapOshiTargets.length > 0) {
             TransformerDelegate.registerExplicitTransformer(
-                    new RemapTransformer(
-                            new String[] {
-                                "oshi/SystemInfo",
-                            },
-                            new String[] {
-                                "oshi/ffm/SystemInfo",
-                            }),
+                    new RemapTransformer(UniversalPatch.OSHI_FROM, UniversalPatch.OSHI_TO),
                     ModOfMendingConfig.remapOshiTargets);
         }
         if (ModOfMendingConfig.remapReflectionTargets.length > 0) {

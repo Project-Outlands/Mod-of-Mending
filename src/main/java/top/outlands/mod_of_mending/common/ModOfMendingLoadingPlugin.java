@@ -1,6 +1,7 @@
 package top.outlands.mod_of_mending.common;
 
 import top.outlands.mod_of_mending.config.ModOfMendingConfig;
+import top.outlands.mod_of_mending.common.autocover.AutoCover;
 import top.outlands.mod_of_mending.transformer.tfcmedical.CommonRegistrar$Transformer;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraftforge.common.config.ConfigManager;
@@ -21,6 +22,9 @@ public class ModOfMendingLoadingPlugin implements IFMLLoadingPlugin {
         for (var prefix : ModOfMendingConfig.extraTransformExclusions) {
             Launch.classLoader.addTransformerExclusion(prefix);
         }
+        // Must run before the config is registered: it replays the previous launch's crash report and writes the
+        // resulting coverage into custom_config/, which ConfigManager only reads while registering.
+        AutoCover.installEarly();
         ConfigManager.register(ModOfMendingConfig.class);
         if (ModOfMendingConfig.modPatchConfig.enableReplayMod) {
             injectCascadingTweak(LateBootstrapTweaker.class.getName());

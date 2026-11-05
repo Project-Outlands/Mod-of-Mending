@@ -10,6 +10,9 @@ public class Reference {
     public static final String MOD_NAME = "{{ mod_name }}";
     public static final String VERSION = "{{ mod_version }}";
 
+    /** Where AutoCover points a player at when it sees a crash it cannot classify. Empty in a fork or a private build. */
+    public static final String ISSUES_URL = "{{ mod_issue_tracker }}";
+
     /**
      * Read by {@code @Mod(dependencies = ...)}.
      *

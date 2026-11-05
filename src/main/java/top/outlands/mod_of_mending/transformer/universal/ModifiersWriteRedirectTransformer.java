@@ -66,6 +66,13 @@ public class ModifiersWriteRedirectTransformer implements IExplicitTransformer {
         @Override
         public void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean isInterface) {
             if (opcode == Opcodes.INVOKEVIRTUAL
+                    && owner.equals("java/lang/Class")
+                    && name.equals("getDeclaredField")
+                    && descriptor.equals("(Ljava/lang/String;)Ljava/lang/reflect/Field;")) {
+                // answered by the stand-in when the caller asks for Field.modifiers, delegated otherwise
+                super.visitMethodInsn(Opcodes.INVOKESTATIC, HOOK_OWNER, "getDeclaredField",
+                        "(Ljava/lang/Class;Ljava/lang/String;)Ljava/lang/reflect/Field;", false);
+            } else if (opcode == Opcodes.INVOKEVIRTUAL
                     && owner.equals(FIELD_OWNER)
                     && (name.equals("set") || name.equals("setInt"))) {
                 String hookName = name.length() == 3 ? "setField" : name + "Field";
