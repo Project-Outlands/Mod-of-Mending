@@ -1,0 +1,32 @@
+package top.outlands.mod_of_mending.transformer.simplehotspring;
+
+import top.outlands.mod_of_mending.common.ModOfMending;
+import javassist.CannotCompileException;
+import javassist.ClassPool;
+import javassist.CtClass;
+import javassist.expr.ExprEditor;
+import javassist.expr.NewExpr;
+import top.outlands.foundation.IExplicitTransformer;
+
+import java.io.ByteArrayInputStream;
+
+public class SimplyHotSpringsConfigTransformer implements IExplicitTransformer {
+    @Override
+    public byte[] transform(byte[] bytes) {
+        try {
+            CtClass cc = ClassPool.getDefault().makeClass(new ByteArrayInputStream(bytes));
+            cc.getClassInitializer().instrument(new ExprEditor(){
+                public void edit(NewExpr e) throws CannotCompileException {
+                    if (e.getClassName().equals("it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap")) {
+                        e.replace("$_ = $proceed(255, 0.75F);");
+                    }
+                }
+            });
+            bytes = cc.toBytecode();
+            cc.defrost();
+        } catch (Throwable t) {
+            ModOfMending.LOGGER.error("Exception {} on {}", t, this.getClass().getSimpleName());
+        }
+        return bytes;
+    }
+}

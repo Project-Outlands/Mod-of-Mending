@@ -13,9 +13,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v7
-      with:
-        # Fugue versions itself from git tags (palantir git-version)
-        fetch-depth: 0
     - name: Set up JDK
       uses: actions/setup-java@v5
       with:
@@ -27,7 +24,7 @@ jobs:
       run: chmod +x ./gradlew
     - name: Execute Gradle build
       run: ./gradlew build
-
+        
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v7
       with:

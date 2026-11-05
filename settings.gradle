@@ -1,5 +1,15 @@
 pluginManagement {
     repositories {
+        // Proxies the hosts below, so a plugin lookup does not wait on a slow origin. Unimined adds the same mirror to
+        // the project's repositories itself, which is what makes build-time downloads use it too.
+        maven {
+            name = 'OutlandsMirror'
+            url = 'https://nexus.jsdu.cn/repository/'
+        }
+        maven {
+            name = 'Outlands'
+            url = 'https://maven.outlands.top/releases/'
+        }
         gradlePluginPortal() {
             content {
                 excludeGroup('org.apache.logging.log4j')

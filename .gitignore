@@ -25,7 +25,7 @@ gradle-app.setting
 # IDEA config
 .idea
 
-# Fugue specific
+# Mod of Mending specific
 /mcmodsrepo/
 libs/
 

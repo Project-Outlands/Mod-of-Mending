@@ -1,6 +1,15 @@
 repositories {
-    // Other repositories described by default:
-    // CleanroomMC: https://maven.cleanroommc.com
+    // Central artifacts come from Aliyun's mirror and everything else from the jsdu mirror that also backs
+    // repo.cleanroommc.com (forge, mcp and Outlands' releases are all proxied there). Both are moved to the front after
+    // this block, because the Unimined plugin appends its own repositories while `unimined.minecraft {}` is evaluated.
+    maven {
+        name = 'CentralMirror'
+        url = 'https://maven.aliyun.com/repository/central/'
+    }
+    maven {
+        name = 'OutlandsMirror'
+        url = 'https://nexus.jsdu.cn/repository/'
+    }
     maven {
         name = 'CurseMaven'
         url = 'https://cursemaven.com'
@@ -13,24 +22,22 @@ repositories {
         name = 'Modrinth'
         url = 'https://api.modrinth.com/maven'
     }
-    mavenCentral()
-    maven {
-        name = 'Outlands'
-        url = 'https://maven.outlands.top/releases'
-    }
     maven {
         name = 'chickenbones'
         url = 'https://chickenbones.net/maven/'
     }
     maven {
-        name = 'ModMaven' //EnderCore
+        name = 'ModMaven' // EnderCore
         url = 'https://modmaven.dev/'
     }
-    maven {
-        name = 'Cleanroom'
-        url = 'https://repo.cleanroommc.com/releases'
+    mavenCentral()
+
+    // Repository order is declaration order in Gradle, and the mirrors are declared before the plugin adds its own.
+    ['CentralMirror', 'OutlandsMirror'].reverseEach { name ->
+        def mirror = repositories.findByName(name)
+        repositories.remove(mirror)
+        repositories.addFirst(mirror)
     }
-    mavenLocal() // Must be last for caching to work
 }
 
 dependencies {
@@ -183,7 +190,7 @@ dependencies {
     // runtimeOnly = runtime dependency
     // compileOnly = compile time dependency
     // annotationProcessor = annotation processing dependencies
-    // contain = bundle dependency jars into final artifact, will extract them in mod loading. Can be used it as jar-in-jar
+    // contain = bundle a dependency jar into the final artifact; wrap the declaration in `contained(...)` (see above)
     // shadow = bundle dependencies into shadow output artifact (relocation configurable in shadowJar task)
     // modImplementation = mod dependency available at both compile time and runtime
     // modCompileOnly = mod dependency available only at compile time

@@ -2,25 +2,33 @@ plugins {
     id 'java'
     id 'java-library'
     id 'maven-publish'
-    id 'com.gradleup.shadow' version '9.5.1'
+    id 'com.gradleup.shadow' version '9.6.1'
     id 'org.jetbrains.gradle.plugin.idea-ext' version '1.4.1'
-    id 'xyz.wagyourtail.unimined' version '1.4.43-kappa'
+    id 'top.outlands.unimined' version '1.4.47'
     id 'net.kyori.blossom' version '2.2.0'
-    id 'com.palantir.git-version' version '4.2.0'
 }
 
 import org.jetbrains.gradle.ext.Gradle
 
 ext {
     //noinspection GroovyAssignabilityCheck
+    // Where an access transformer sits inside the jar, relative to META-INF/: the loader opens exactly that path, and
+    // the jar section below declares the same string. The file itself lives at the same path under src/main/resources.
     access_transformer_locations = "${mod_id}_at.cfg"
 }
 
-version = versionDetails().lastTag
+// The property has always been allowed to name more than one file, and both the jar section and the processResources
+// placement have to agree on the list, so it is split once, here.
+def accessTransformerLocations = access_transformer_locations.trim().split('\\s+').findAll { !it.isBlank() }
+
+version = mod_version
 group = root_package
 
 base {
-    archivesName = "+$mod_name"
+    // The archive is named after the mod rather than the id. The id used to be what put the jar in front of other
+    // coremods, because discovery opened jars in filename order and a transformer can only reach classes that have
+    // not been loaded yet - that job is now `loadOrder` in the jar section below, so the name is free to be readable.
+    archivesName = mod_name
 }
 
 java {
@@ -36,8 +44,6 @@ java {
 }
 
 configurations {
-    contain
-    implementation.extendsFrom(contain)
     modCompileOnly
     compileOnly.extendsFrom(modCompileOnly)
     modRuntimeOnly
@@ -54,13 +60,32 @@ unimined.minecraft {
         mcp("stable", "39-1.12")
     }
 
-    cleanroom {
+    outlands {
         if (use_access_transformer.toBoolean()) {
-            accessTransformer "${rootProject.projectDir}/src/main/resources/$access_transformer_locations"
+            // A development run applies one access transformer - Unimined rewrites Minecraft against it - while the jar
+            // can carry several. A second location therefore widens classes only in the built mod.
+            accessTransformer "src/main/resources/${accessTransformerLocations[0]}"
         }
-        loader cleanroom_version
+        // The jar-level facts live in the mcmod.info `jar` section, not in the manifest. Every value here comes from a
+        // build property, which is why it belongs to the build: keeping it in a metadata file would mean two places to
+        // keep in step.
+        jarMetadata {
+            license mod_license
+            // Opened before every jar that declares nothing. Coremod plugin classes are loaded the moment their jar is
+            // discovered and a transformer cannot reach a class that is already loaded, so this is what decides whether
+            // the transformers registered here can still affect another coremod's own transformer classes.
+            loadOrder "first"
+            if (is_coremod.toBoolean()) {
+                coreMod coremod_plugin_class_name
+                alsoMod coremod_includes_mod.toBoolean()
+            }
+            if (use_access_transformer.toBoolean()) {
+                at(*accessTransformerLocations)
+            }
+        }
+        loader "2026.11.05"
         runs.all {
-            systemProperty("crl.dev.mixin", "${mod_id}.mixin.json")
+            systemProperty("outlands.dev.mixin", "${mod_id}.mixin.json")
             args += ['--username', minecraft_username]
             def extraArgs = extra_jvm_args
             if (extraArgs != null && !extraArgs.trim().isEmpty()) {
@@ -78,9 +103,9 @@ unimined.minecraft {
     }
 
     defaultRemapJar = false
-
+    
     String jarTaskName = enable_shadow.toBoolean() ? "shadowJar" : "jar"
-
+    
     remap(tasks.named(jarTaskName).get()) {
         mixinRemap {
             enableBaseMixin()
@@ -107,7 +132,14 @@ dependencies {
 apply from: 'gradle/scripts/dependencies.gradle'
 
 processResources {
-    rename '(.+_at.cfg)', 'META-INF/$1'
+    // The loader opens an access transformer as `META-INF/<declared path>`, so the declared location decides where the
+    // file lands: a name pattern (`_at.cfg`) would stop matching the moment someone sets a custom location, and the jar
+    // would then declare an entry it does not contain.
+    if (use_access_transformer.toBoolean()) {
+        accessTransformerLocations.each { location ->
+            filesMatching(location) { it.path = "META-INF/${it.path}" }
+        }
+    }
 }
 
 sourceSets {
@@ -116,14 +148,13 @@ sourceSets {
             javaSources {
                 property('mod_id', mod_id)
                 property('mod_name', mod_name)
-                property('mod_version', version)
+                property('mod_version', mod_version)
                 property('package', "${root_package}.${mod_id}")
-                property('crl_version', '0.7.3-alpha')
             }
             resources {
                 property('mod_id', mod_id)
                 property('mod_name', mod_name)
-                property('mod_version', version)
+                property('mod_version', mod_version)
                 property('mod_description', mod_description)
                 property('mod_authors', mod_authors.toString().split(',').findAll { !it.isBlank() }.collect { "\"${it.strip()}\"" }.join(', '))
                 property('mod_credits', mod_credits)
@@ -179,32 +210,6 @@ compileJava {
 jar {
     archiveClassifier = 'dev'
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    if (configurations.contain.size() > 0) {
-        into('/') {
-            from configurations.contain
-        }
-    }
-    doFirst {
-        manifest {
-            def attribute_map = [:]
-            attribute_map['ModType'] = 'CRL'
-            attribute_map['MixinConfigs'] = "${mod_id}.mixin.json"
-            if (configurations.contain.size() > 0) {
-                attribute_map['ContainedDeps'] = configurations.contain.collect { it.name }.join(' ')
-                attribute_map['NonModDeps'] = true
-            }
-            if (is_coremod.toBoolean()) {
-                attribute_map['FMLCorePlugin'] = coremod_plugin_class_name
-                if (coremod_includes_mod.toBoolean()) {
-                    attribute_map['FMLCorePluginContainsFMLMod'] = true
-                }
-            }
-            if (use_access_transformer.toBoolean()) {
-                attribute_map['FMLAT'] = access_transformer_locations
-            }
-            attributes(attribute_map)
-        }
-    }
     finalizedBy(tasks.named(remapTaskName).get())
 }
 

@@ -1,0 +1,29 @@
+package top.outlands.mod_of_mending.mixin.extrautils2;
+
+import top.outlands.mod_of_mending.helper.FieldAccess;
+import com.rwtema.extrautils2.utils.datastructures.FieldSetter;
+import net.minecraftforge.fml.common.FMLLog;
+import org.apache.logging.log4j.Level;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.lang.reflect.Field;
+
+@Mixin(value = FieldSetter.class, remap = false)
+public class FieldSetterMixin {
+    @Shadow private Field field;
+
+
+    @Inject(method = "apply", at = @At(value = "HEAD"), cancellable = true)
+    private void onApply(Object owner, Object object, CallbackInfo ci) {
+        try {
+            FieldAccess.setField(this.field, owner, object);
+        } catch (Exception e) {
+            FMLLog.log.log(Level.WARN, "Unable to set {} with value {}", this.field, object);
+        }
+        ci.cancel();
+    }
+}
