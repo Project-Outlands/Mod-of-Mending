@@ -1,23 +1,19 @@
 package top.outlands.mod_of_mending.transformer.transcend;
 
-import top.outlands.mod_of_mending.common.ModOfMending;
-import javassist.ClassPool;
-import javassist.CtClass;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.InsnNode;
+import org.objectweb.asm.tree.TypeInsnNode;
+import top.outlands.mod_of_mending.helper.Bytecode;
 import top.outlands.foundation.IExplicitTransformer;
-
-import java.io.ByteArrayInputStream;
 
 public class TweakerTransformer implements IExplicitTransformer {
     @Override
     public byte[] transform(byte[] bytes) {
-        try {
-            CtClass cc = ClassPool.getDefault().makeClass(new ByteArrayInputStream(bytes));
-            cc.getDeclaredMethod("getLaunchArguments").setBody("{return new String[0];}");
-            bytes = cc.toBytecode();
-            cc.defrost();
-        } catch (Throwable t) {
-            ModOfMending.LOGGER.error("Exception {} on {}", t, this.getClass().getSimpleName());
-        }
-        return bytes;
+        return Bytecode.replaceBody(bytes, method -> method.name.equals("getLaunchArguments"), method -> {
+            method.instructions.add(new InsnNode(Opcodes.ICONST_0));
+            method.instructions.add(new TypeInsnNode(Opcodes.ANEWARRAY, "java/lang/String"));
+            method.instructions.add(new InsnNode(Opcodes.ARETURN));
+            method.maxStack = 1;
+        });
     }
 }

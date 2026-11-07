@@ -1,26 +1,15 @@
 package top.outlands.mod_of_mending.transformer.vampirism;
 
-import top.outlands.mod_of_mending.common.ModOfMending;
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.CtField;
-import javassist.Modifier;
+import org.objectweb.asm.Opcodes;
+import top.outlands.mod_of_mending.helper.Bytecode;
 import top.outlands.foundation.IExplicitTransformer;
 
-import java.io.ByteArrayInputStream;
-
+/** The patch calls into this class from the loader side, so it cannot stay package-private. */
 public class TConstructBloodConversionTransformer implements IExplicitTransformer {
     @Override
     public byte[] transform(byte[] bytes) {
-
-        try {
-            CtClass cc = ClassPool.getDefault().makeClass(new ByteArrayInputStream(bytes));
-            cc.setModifiers(Modifier.setPublic(cc.getModifiers()));
-            bytes = cc.toBytecode();
-            cc.defrost();
-        } catch (Throwable t) {
-            ModOfMending.LOGGER.error("Exception {} on {}", t, this.getClass().getSimpleName());
-        }
-        return bytes;
+        return Bytecode.edit(bytes,
+                node -> node.access = (node.access & ~(Opcodes.ACC_PRIVATE | Opcodes.ACC_PROTECTED))
+                        | Opcodes.ACC_PUBLIC);
     }
 }

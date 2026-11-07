@@ -1,33 +1,21 @@
 package top.outlands.mod_of_mending.transformer.betterfc;
 
-import top.outlands.mod_of_mending.common.ModOfMending;
-import javassist.CannotCompileException;
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.expr.ExprEditor;
-import javassist.expr.MethodCall;
+import org.objectweb.asm.Opcodes;
+import top.outlands.mod_of_mending.helper.Bytecode;
 import top.outlands.foundation.IExplicitTransformer;
 
-import java.io.ByteArrayInputStream;
-
+/**
+ * Better Formatting Code reaches for {@code Launch.classLoader.transformers} with a private-field helper; hand it the
+ * loader's own list instead of a field this loader no longer has.
+ */
 public class HK_LoaderTransformer implements IExplicitTransformer {
+    private static final String TRANSFORMER_DELEGATE = "top/outlands/foundation/TransformerDelegate";
 
     @Override
     public byte[] transform(byte[] bytes) {
-        try {
-            CtClass cc = ClassPool.getDefault().makeClass(new ByteArrayInputStream(bytes));
-            cc.getDeclaredMethod("onConstructed").instrument(new ExprEditor() {
-                public void edit(MethodCall m) throws CannotCompileException {
-                    if (m.getMethodName().equals("getPrivateField") && m.getLineNumber() == 16) {
-                        m.replace("$_ = top.outlands.foundation.TransformerDelegate#getTransformers();");
-                    }
-                }
-            });
-            bytes = cc.toBytecode();
-            cc.defrost();
-        } catch (Throwable t) {
-            ModOfMending.LOGGER.error("Exception {} on {}", t, this.getClass().getSimpleName());
-        }
-        return bytes;
+        return Bytecode.replaceCallStatement(bytes, method -> method.name.equals("onConstructed"),
+                call -> call.name().equals("getPrivateField"),
+                mv -> mv.visitMethodInsn(Opcodes.INVOKESTATIC, TRANSFORMER_DELEGATE, "getTransformers",
+                        "()Ljava/util/List;", false));
     }
 }

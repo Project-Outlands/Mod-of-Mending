@@ -1,29 +1,19 @@
 package top.outlands.mod_of_mending.transformer.logisticpipes;
 
-import top.outlands.mod_of_mending.common.ModOfMending;
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.CtMethod;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.InsnNode;
+import org.objectweb.asm.tree.IntInsnNode;
+import top.outlands.mod_of_mending.helper.Bytecode;
 import top.outlands.foundation.IExplicitTransformer;
 
-import java.io.ByteArrayInputStream;
-
-
+/** Runs long before every other patch: this handler decides which classes exist in the first place. */
 public class LogisticsPipesClassInjectorTransformer implements IExplicitTransformer {
     @Override
     public byte[] transform(byte[] bytes) {
-        try {
-            CtClass cc = ClassPool.getDefault().makeClass(new ByteArrayInputStream(bytes));
-            cc.addMethod(CtMethod.make(
-                    """
-                    public int getPriority() {
-                        return -1000;
-                    }
-                    """, cc));
-            bytes = cc.toBytecode();
-        }catch (Throwable t) {
-            ModOfMending.LOGGER.error("Exception {} on {}", t, this.getClass().getSimpleName());
-        }
-        return bytes;
+        return Bytecode.addMethod(bytes, Opcodes.ACC_PUBLIC, "getPriority", "()I", method -> {
+            method.instructions.add(new IntInsnNode(Opcodes.SIPUSH, -1000));
+            method.instructions.add(new InsnNode(Opcodes.IRETURN));
+            method.maxStack = 1;
+        });
     }
 }

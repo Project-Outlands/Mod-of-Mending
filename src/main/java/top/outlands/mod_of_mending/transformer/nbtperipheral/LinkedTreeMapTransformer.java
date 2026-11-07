@@ -1,10 +1,6 @@
 package top.outlands.mod_of_mending.transformer.nbtperipheral;
 
 import top.outlands.mod_of_mending.common.ModOfMending;
-import javassist.*;
-import javassist.expr.ConstructorCall;
-import javassist.expr.ExprEditor;
-import javassist.expr.MethodCall;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;

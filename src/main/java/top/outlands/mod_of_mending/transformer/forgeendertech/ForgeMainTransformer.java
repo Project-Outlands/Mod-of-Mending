@@ -1,34 +1,18 @@
 package top.outlands.mod_of_mending.transformer.forgeendertech;
 
-import top.outlands.mod_of_mending.common.ModOfMending;
-import javassist.CannotCompileException;
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.CtMethod;
-import javassist.expr.ExprEditor;
-import javassist.expr.MethodCall;
+import top.outlands.mod_of_mending.helper.Bytecode;
 import top.outlands.foundation.IExplicitTransformer;
 
-import java.io.ByteArrayInputStream;
-
+/**
+ * ForgeEndertech's integrity check reads its own jar signature and refuses to start when it cannot. Only that call is
+ * dropped; {@code super.initClient(event)} and everything else in the method keep running.
+ */
 public class ForgeMainTransformer implements IExplicitTransformer {
+    private static final String CHECK = "com/endertech/minecraft/forge/versions/Dependencies";
+
     @Override
     public byte[] transform(byte[] bytes) {
-        try {
-            CtClass cc = ClassPool.getDefault().makeClass(new ByteArrayInputStream(bytes));
-            cc.getDeclaredMethod("initClient").instrument(new ExprEditor(){
-                @Override
-                public void edit(MethodCall m) throws CannotCompileException {
-                    if (m.getMethodName().equals("checkIntegrityOnce")) {
-                        m.where().setBody("{}");
-                    }
-                }
-            });
-            bytes = cc.toBytecode();
-            cc.defrost();
-        } catch (Throwable t) {
-            ModOfMending.LOGGER.error("Exception {} on {}", t, this.getClass().getSimpleName());
-        }
-        return bytes;
+        return Bytecode.replaceCallStatement(bytes, method -> method.name.equals("initClient"),
+                call -> call.owner().equals(CHECK) && call.name().equals("checkIntegrityOnce"), mv -> {});
     }
 }

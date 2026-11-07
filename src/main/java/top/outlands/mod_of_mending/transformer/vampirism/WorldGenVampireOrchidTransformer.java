@@ -1,26 +1,21 @@
 package top.outlands.mod_of_mending.transformer.vampirism;
 
-import top.outlands.mod_of_mending.common.ModOfMending;
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.CtField;
-import javassist.Modifier;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.FieldNode;
+import top.outlands.mod_of_mending.helper.Bytecode;
 import top.outlands.foundation.IExplicitTransformer;
 
-import java.io.ByteArrayInputStream;
-
+/** The patch builds this generator from outside, so both the class and its flower field have to be reachable. */
 public class WorldGenVampireOrchidTransformer implements IExplicitTransformer {
     @Override
     public byte[] transform(byte[] bytes) {
-        try {
-            CtClass cc = ClassPool.getDefault().makeClass(new ByteArrayInputStream(bytes));
-            cc.setModifiers(cc.getModifiers() - Modifier.PRIVATE + Modifier.PUBLIC);
-            CtField flower = cc.getField("flower");
-            flower.setModifiers((flower.getModifiers() | Modifier.FINAL | Modifier.PUBLIC) - Modifier.PRIVATE);
-            bytes = cc.toBytecode();
-        } catch (Throwable t) {
-            ModOfMending.LOGGER.error("Exception {} on {}", t, this.getClass().getSimpleName());
-        }
-        return bytes;
+        return Bytecode.edit(bytes, node -> {
+            node.access = (node.access & ~Opcodes.ACC_PRIVATE) | Opcodes.ACC_PUBLIC;
+            for (FieldNode field : node.fields) {
+                if (field.name.equals("flower")) {
+                    field.access = (field.access | Opcodes.ACC_FINAL | Opcodes.ACC_PUBLIC) & ~Opcodes.ACC_PRIVATE;
+                }
+            }
+        });
     }
 }

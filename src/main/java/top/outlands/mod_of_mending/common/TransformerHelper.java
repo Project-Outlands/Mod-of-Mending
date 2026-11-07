@@ -12,7 +12,6 @@ import top.outlands.mod_of_mending.transformer.chiseled_me.ChiseledMeLoaderTrans
 import top.outlands.mod_of_mending.transformer.colytra.EntityLivingBaseTransformer;
 import top.outlands.mod_of_mending.transformer.corpse.MessageOpenHistoryTransformer;
 import top.outlands.mod_of_mending.transformer.crossbow.TransformerEntityArrowTransformer;
-import top.outlands.mod_of_mending.transformer.customskinloader.ForgeTweakerTransformer;
 import top.outlands.mod_of_mending.transformer.dropt.ValidatorAdapterFactoryTransformer;
 import top.outlands.mod_of_mending.transformer.ears.EarsASMTransformer;
 import top.outlands.mod_of_mending.transformer.enchantmentcontrol.EnumInputClassTransformer;
@@ -76,7 +75,6 @@ import top.outlands.mod_of_mending.transformer.vintagefix.MixinConfigPluginTrans
 import top.outlands.mod_of_mending.transformer.valkyrienskies.WorldPhysicsColliderTransformer;
 import top.outlands.mod_of_mending.transformer.vampirism.TConstructBloodConversionTransformer;
 import top.outlands.mod_of_mending.transformer.vampirism.WorldGenVampireOrchidTransformer;
-import top.outlands.mod_of_mending.transformer.xnet.EnergyConnectorSettingsTransformer;
 import top.outlands.mod_of_mending.transformer.zerocore.DisplayListTransformer;
 import top.outlands.foundation.TransformerDelegate;
 import top.outlands.foundation.boot.ActualClassLoader;
@@ -163,14 +161,6 @@ public class TransformerHelper {
         if (ModOfMendingConfig.modPatchConfig.enableSmoothFont) {
             TransformerDelegate.registerExplicitTransformer(
                     new FontRendererTransformer(), "net.minecraft.client.gui.FontRenderer");
-        }
-        if (ModOfMendingConfig.modPatchConfig.enableCSL) {
-            TransformerDelegate.registerExplicitTransformer(
-                    new ForgeTweakerTransformer(), "customskinloader.forge.ForgeTweaker");
-        }
-        if (ModOfMendingConfig.modPatchConfig.enableXNet) {
-            TransformerDelegate.registerExplicitTransformer(
-                    new EnergyConnectorSettingsTransformer(), "mcjty.xnet.apiimpl.energy.EnergyConnectorSettings");
         }
         if (ModOfMendingConfig.modPatchConfig.enableSurvivialInc) {
             TransformerDelegate.registerExplicitTransformer(

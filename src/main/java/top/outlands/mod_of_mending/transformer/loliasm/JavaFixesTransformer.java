@@ -1,13 +1,11 @@
 package top.outlands.mod_of_mending.transformer.loliasm;
 
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.InsnNode;
 import top.outlands.mod_of_mending.common.ModOfMending;
-import javassist.ClassPool;
-import javassist.CtClass;
+import top.outlands.mod_of_mending.helper.Bytecode;
 import top.outlands.foundation.IExplicitTransformer;
 import zone.rong.loliasm.core.LoliLoadingPlugin;
-
-import java.io.ByteArrayInputStream;
-import java.lang.reflect.Field;
 
 public class JavaFixesTransformer implements IExplicitTransformer {
     private boolean shouldRun() {
@@ -25,14 +23,6 @@ public class JavaFixesTransformer implements IExplicitTransformer {
         if (shouldRun()) {
             return bytes;
         }
-        try {
-            var cp = ClassPool.getDefault();
-            CtClass cc = cp.makeClass(new ByteArrayInputStream(bytes));
-            cc.getDeclaredMethod("run").setBody("{}");
-            bytes = cc.toBytecode();
-        } catch (Throwable t) {
-            ModOfMending.LOGGER.error("Exception {} on {}", t, this.getClass().getSimpleName());
-        }
-        return bytes;
+        return Bytecode.emptyBody(bytes, "run");
     }
 }

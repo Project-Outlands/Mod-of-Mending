@@ -58,10 +58,6 @@ public class ModPatchConfig {
     @Config.Name("Enable SmoothFont Patch")
     @Config.Comment("It failed to patch FontRenderer for no fxxking reason.")
     public boolean enableSmoothFont = true;
-    @Config.Name("Enable Custom Skin Loader Patch")
-    public boolean enableCSL = true;
-    @Config.Name("Enable XNet Patch")
-    public boolean enableXNet = true;
     @Config.Name("Enable Howling Moon Patch")
     public boolean enableHowlingMoon = true;
     @Config.Name("Enable Custom NPCs Patch")

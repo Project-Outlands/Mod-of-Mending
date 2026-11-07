@@ -1,23 +1,17 @@
 package top.outlands.mod_of_mending.transformer.logisticpipes;
 
-import top.outlands.mod_of_mending.common.ModOfMending;
-import javassist.ClassPool;
-import javassist.CtClass;
-import javassist.CtMethod;
+import top.outlands.mod_of_mending.helper.Bytecode;
 import top.outlands.foundation.IExplicitTransformer;
 
-import java.io.ByteArrayInputStream;
-
+/**
+ * LogisticsPipes defines its generated classes through a reflective {@code defineClass} that a modern JVM refuses; {@code HookHelper.defineClass} uses the loader instead.
+ */
 public class defineClassTransformer implements IExplicitTransformer {
+    private static final String HOOK_HELPER = "top/outlands/mod_of_mending/helper/HookHelper";
+
     @Override
     public byte[] transform(byte[] bytes) {
-        try {
-            CtClass cc = ClassPool.getDefault().makeClass(new ByteArrayInputStream(bytes));
-            cc.getDeclaredMethod("loadClass").setBody("return top.outlands.mod_of_mending.helper.HookHelper#defineClass($$);");
-            bytes = cc.toBytecode();
-        }catch (Throwable t) {
-            ModOfMending.LOGGER.error("Exception {} on {}", t, this.getClass().getSimpleName());
-        }
+        bytes = Bytecode.forwardBody(bytes, method -> method.name.equals("loadClass"), HOOK_HELPER, "defineClass");
         return bytes;
     }
 }

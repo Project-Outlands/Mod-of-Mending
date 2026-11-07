@@ -1,6 +1,5 @@
 package top.outlands.mod_of_mending.transformer.universal;
 
-import javassist.*;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
