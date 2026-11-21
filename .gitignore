@@ -30,5 +30,6 @@ gradle-app.setting
 libs/
 
 # AI
-.pi
-.codegraph
+/.pi
+/.codegraph
+/.serena
