@@ -270,10 +270,11 @@ public final class AutoCover {
                 continue;
             }
             for (UniversalPatch patch : UniversalPatch.ALL) {
-                // "any class that touches java.lang.reflect.Field" is far too weak to call a signal, and the last
-                // two patches change behaviour rather than fixing a crash shape
+                // "any class that touches java.lang.reflect.Field" is far too weak to call a signal, two patches
+                // change behaviour rather than fixing a crash shape, and adding a constructor matches any class that
+                // happens not to have one - which is most of them, so it would always win the guess
                 if (patch == UniversalPatch.REFLECTION || patch == UniversalPatch.CONNECTION
-                        || patch == UniversalPatch.MOUSE_WHEEL) {
+                        || patch == UniversalPatch.MOUSE_WHEEL || patch == UniversalPatch.NO_ARG_CONSTRUCTOR) {
                     continue;
                 }
                 if (patch.wouldRewrite(raw)) {

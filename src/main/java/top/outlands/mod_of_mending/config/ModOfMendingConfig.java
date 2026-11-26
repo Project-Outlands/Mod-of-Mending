@@ -6,7 +6,7 @@ import net.minecraftforge.common.config.Config;
 import java.util.HashMap;
 import java.util.Map;
 
-@Config(modid = Reference.MOD_ID, name = Reference.MOD_ID)
+@Config(modid = Reference.MOD_ID, name = Reference.MOD_ID, format = Config.Format.TOML)
 @Config.RequiresMcRestart
 public class ModOfMendingConfig {
     @Config.Comment("""
@@ -325,6 +325,24 @@ public class ModOfMendingConfig {
     @Config.Name("Class Hierarchy Walk Patching List")
     public static String[] getCommonSuperClassTargets = new String[] {
         "com.enderio.core.common.transform.NoClassloadClassWriter",
+    };
+
+    @Config.Comment("""
+        Registration APIs that build their instances through Class.getConstructor() - a public no-argument
+        constructor - die with "has no parameterless constructor" when the class only offers an argument-taking
+        one. openmods' network event registry is such a registry: it instantiates every registered event class per
+        packet and relies on readFromStream to fill the payload, so the fields the arguments would have set are
+        overwritten anyway and the missing constructor is invisible until registration runs.
+        Each entry gets a public no-argument constructor that keeps the mandatory super() call and nothing else. A
+        constructor that exists but is narrower is widened instead, because two ()V constructors is a class file the
+        JVM rejects. Interfaces and enums are skipped, and nothing checks that the superclass has a no-argument
+        constructor or that one is reachable from another package - pick targets whose superclass offers a public
+        ()V, otherwise the class fails to link or throws on first call instead of at registration.
+        Format: fully.qualified.ClassName
+        """)
+    @Config.Name("No-Arg Constructor Adding List")
+    public static String[] addNoArgConstructorTargets = new String[] {
+        "openblocks.common.entity.EntityMiniMe$OwnerChangeEvent",
     };
 
     @Config.Comment("""

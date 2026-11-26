@@ -533,6 +533,10 @@ public class TransformerHelper {
             TransformerDelegate.registerExplicitTransformer(
                     new GetCommonSuperClassTransformer(), ModOfMendingConfig.getCommonSuperClassTargets);
         }
+        if (ModOfMendingConfig.addNoArgConstructorTargets.length > 0) {
+            TransformerDelegate.registerExplicitTransformer(
+                    new AddNoArgConstructorTransformer(), ModOfMendingConfig.addNoArgConstructorTargets);
+        }
         if (ModOfMendingConfig.nonUpdateTargets.length > 0) {
             TransformerDelegate.registerExplicitTransformer(
                 new ConnectionBlockingTransformer(), ModOfMendingConfig.nonUpdateTargets);
