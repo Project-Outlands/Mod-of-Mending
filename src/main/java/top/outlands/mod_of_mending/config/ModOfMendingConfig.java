@@ -6,7 +6,7 @@ import net.minecraftforge.common.config.Config;
 import java.util.HashMap;
 import java.util.Map;
 
-@Config(modid = Reference.MOD_ID, name = Reference.MOD_ID, format = Config.Format.TOML)
+@Config(modid = Reference.MOD_ID, name = Reference.MOD_ID, format = Config.Format.CFG)
 @Config.RequiresMcRestart
 public class ModOfMendingConfig {
     @Config.Comment("""
