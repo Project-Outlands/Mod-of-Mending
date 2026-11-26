@@ -315,6 +315,19 @@ public class ModOfMendingConfig {
     };
 
     @Config.Comment("""
+        ClassWriter subclasses that compute stack map frames with their own getCommonSuperClass, written to read
+        class files instead of loading them. Such an implementation usually only recognises the case where one type
+        is the other's direct superclass and answers java/lang/Object otherwise; ASM does not promise which of the
+        merged pair it names first, and 9.11 changed that order, so those writers started writing Object into frames
+        that need the real superclass, and the classes they patch fail verification. Each entry replaces that method
+        with the symmetric, still class-loading-free walk in SuperClassHelper.
+        """)
+    @Config.Name("Class Hierarchy Walk Patching List")
+    public static String[] getCommonSuperClassTargets = new String[] {
+        "com.enderio.core.common.transform.NoClassloadClassWriter",
+    };
+
+    @Config.Comment("""
         Clearing the final bit through java.lang.reflect.Field.modifiers is dead weight: Field.set() writes final
         fields by itself (the bit only matters for constants the compiler folded in), and on Java 26+ no bypass,
         JavaBypass included, can mutate that field anyway - so old code that clears it fails on that very line.

@@ -4,6 +4,7 @@ import top.outlands.foundation.IExplicitTransformer;
 import top.outlands.mod_of_mending.config.ModOfMendingConfig;
 import top.outlands.mod_of_mending.transformer.universal.AddFutureCallbackTransformer;
 import top.outlands.mod_of_mending.transformer.universal.ComputeIfAbsentTransformer;
+import top.outlands.mod_of_mending.transformer.universal.GetCommonSuperClassTransformer;
 import top.outlands.mod_of_mending.transformer.universal.ITweakerTransformer;
 import top.outlands.mod_of_mending.transformer.universal.MalformedUUIDTransformer;
 import top.outlands.mod_of_mending.transformer.universal.ReflectFieldTransformer;
@@ -130,6 +131,9 @@ public final class UniversalPatch {
             AddFutureCallbackTransformer::new);
     public static final UniversalPatch TO_ARRAY = new UniversalPatch(
             "List.toArray() Patching List", () -> ModOfMendingConfig.toArrayPatchTargets, ToArrayTransformer::new);
+    public static final UniversalPatch COMMON_SUPER_CLASS = new UniversalPatch(
+            "Class Hierarchy Walk Patching List", () -> ModOfMendingConfig.getCommonSuperClassTargets,
+            GetCommonSuperClassTransformer::new);
     public static final UniversalPatch MOUSE_WHEEL = new UniversalPatch(
             "Mouse.getEventDWheel() Patching List", () -> ModOfMendingConfig.mouseWheelPatchTargets,
             () -> new top.outlands.mod_of_mending.transformer.universal.DWheelTransformer());
@@ -140,6 +144,6 @@ public final class UniversalPatch {
     /** Every list-shaped patch, mostly for diagnostics. */
     public static final UniversalPatch[] ALL = {
             REFLECTION, GET_URL, SCRIPT_ENGINE, UUID, JAVAX, LAUNCHWRAPPER, OSHI, SUN_REFLECTION, CODE_SOURCE,
-            COMPUTE_IF_ABSENT, FUTURES, TO_ARRAY, MOUSE_WHEEL, CONNECTION
+            COMPUTE_IF_ABSENT, FUTURES, TO_ARRAY, COMMON_SUPER_CLASS, MOUSE_WHEEL, CONNECTION
     };
 }
