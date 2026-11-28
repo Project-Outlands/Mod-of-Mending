@@ -26,7 +26,10 @@ public class ModOfMending {
 
     public static boolean isModNewerThan(String modid, String version) {
         var mod = Loader.instance().getIndexedModList().get(modid);
-        return new ComparableVersion(mod.getVersion()).compareTo(new ComparableVersion(version)) > 0;
+        // A mixin configuration asks this while the loader is still collecting mods, when the mod in
+        // question may not have been registered yet. "Not registered yet" is not "new enough": the
+        // answer a patch needs is no, and it will be asked again.
+        return mod != null && new ComparableVersion(mod.getVersion()).compareTo(new ComparableVersion(version)) > 0;
     }
 	
 	@Instance(Reference.MOD_ID)
